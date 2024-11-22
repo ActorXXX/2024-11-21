@@ -1,72 +1,85 @@
+// La ruta base
 const API_GITHUB = 'https://api.github.com'
 
+// TEMPLATE STRING - Completando la ruta
 const API_GITHUB_USER = `${API_GITHUB}/users`
+
 
 const profileFoto = document.getElementById('foto')
 const profileNombre = document.getElementById('nombre')
 const profileEnlace = document.getElementById('enlace')
 const inputUsuario = document.getElementById('usuario')
+const inputBoton = document.getElementById('buscaPerfil')
 
+console.log(inputUsuario.value)
 //const prueba = document.getElementById('prueba')
 
-//------------
+//----OBTENER USUARIO
+inputBoton.addEventListener('click', () => {
+    const username = inputUsuario.value
+    console.log(username)
 
-// ---------------OBTENER DATOS
+    cargarPerfil(username)
+})
 
-const cargarPerfil = async () => {
-    // Validamos si ya existe el usuario
+// ----OBTENER DATOS
+
+const cargarPerfil = async (username) => {
     const userData = JSON.parse(localStorage.getItem('user'))
-    let user = {}
+    // Validamos si ya existe el usuario
+    let user = userData
 
-    if(userData) {
-        user = {
-            photo: userData.photo,
-            name: userData.name,
-            profileLink: userData.profileLink
-        }
+    if(username) {
+        if(userData) {
+            if(username != userData.username) {
+                const response = await fetch(`${API_GITHUB_USER}/${username}`)
+                const data = await response.json()
 
-        console.log('obteniendo los datos desde el storage')
+                user = {
+                    username: data.login,
+                    photo: data.avatar_url,
+                    name: data.name,
+                    profileLink: data.html_url
+                }
 
-    } else {
-        const response = await fetch(`${API_GITHUB_USER}/ActorXXX`)
-        const data = await response.json()
+                localStorage.setItem('user', JSON.stringify(user))
+            } else {
+                user = {
+                    username: userData.login,
+                    photo: userData.avatar_url,
+                    name: userData.name,
+                    profileLink: userData.html_url
+                }
+
+                console.log('Obteniendo los datos desde el Storage')
+            }
+
+        } else {
+            if(username != null || username !== userData.username) {
+                const response = await fetch(`${API_GITHUB_USER}/${username}`)
+                const data = await response.json()
     
-        user = {
-            photo: data.avatar_url,
-            name: data.name,
-            profileLink: data.html_url,
+                user = {
+                    username: data.login,
+                    photo: data.avatar_url,
+                    name: data.name,
+                    profileLink: data.html_url
+                }
+                localStorage.setItem('user', JSON.stringify(user))
+            }
+            console.log('Obteniendo los datos con fetch')
+        }
     }
 
-    // guardando en el storage
-        localStorage.setItem('user', JSON.stringify(user))
+    // Mostrando los datos en pantalla
 
-        console.log('obteniendo los datos con FETCH')
+    if(user) {
+        profileFoto.src = user.photo
+        profileNombre.textContent = user.name
+        profileEnlace.href = user.profileLink
+    } else {
+        return
     }
-
-    //mostrando los datos en la pantalla
-
-    profileFoto.src = user.photo
-    profileNombre.textContent = user.name
-    profileEnlace.href = user.profileLink
-
-    console.log(user)
 }
 
-cargarPerfil()
-
-
-// creando un objeto
-// sessionStorage.setItem('fruta', 'pera')
-
-
-
-//const fruta = localStorage.getItem('fruta')
-
-//console.log(fruta)
-
-//prueba.textContent = fruta
-
-
-// borrar lo que creamos
-
-//localStorage.removeItem('fruta')
+//cargarPerfil()
